@@ -1,0 +1,24 @@
+<div class="main-container">
+  <div class="sidebar">
+    <div class="filtro-titulo">Configure filtros</div>
+    <select class="flat-select" [(ngModel)]="provinciaSeleccionada" (change)="actualizarMunicipios()">
+      <option value="">Seleccione provincia</option>
+      <option *ngFor="let prov of provincias" [value]="prov">{{prov}}</option>
+    </select>
+    <select class="flat-select" [(ngModel)]="municipioSeleccionado" [disabled]="!municipioEnabled" (change)="actualizarMapa()">
+      <option value="">Seleccione municipio</option>
+      <option *ngFor="let municipio of municipios" [value]="municipio">{{municipio}}</option>
+    </select>
+    <select class="flat-select" [(ngModel)]="tipoCentroSeleccionado" (change)="actualizarMapa()">
+      <option value="">Seleccione tipo de centro</option>
+      <option *ngFor="let tipo of tiposCentro" [value]="tipo.value">{{tipo.label}}</option>
+    </select>
+    <select class="flat-select" [(ngModel)]="moduloSeleccionado" (change)="actualizarMapa()">
+      <option value="">Seleccione ciclo formativo</option>
+      <option *ngFor="let ciclo of ciclos" [value]="ciclo.codcicl">{{ciclo.nom}}</option>
+    </select>
+  </div>
+  <div class="main-map" id="map"></div>
+  <div id="popup" class="ol-popup"></div>
+</div>
+
