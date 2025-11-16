@@ -17,8 +17,8 @@ import * as proj4x from 'proj4'
 
 const proj4 = (proj4x as any).default || proj4x
 
-import { centros } from '../../../assets/data/centrosEducativos'
-import { ciclos } from '../../../assets/data/ciclosFormativos'
+import { institutos } from '../../../assets/data/institutos'
+import { ciclos } from '../../../assets/data/ciclos'
 
 @Component({
   selector: 'app-mapa-centros',
@@ -28,6 +28,8 @@ import { ciclos } from '../../../assets/data/ciclosFormativos'
 export class MapaCentrosComponent implements OnInit, AfterViewInit {
   map!: Map
   popupOverlay!: Overlay
+  tooltipOverlay!: Overlay  // ✅ AÑADIDO
+  tooltipElement!: HTMLElement  // ✅ AÑADIDO
   pinsLayer!: VectorLayer<any>
   provincias: string[] = []
   municipios: string[] = []
@@ -48,23 +50,19 @@ export class MapaCentrosComponent implements OnInit, AfterViewInit {
   tipoCentroLabels: Record<string, string> = {
     CIFP: 'Centro Integrado de Formación Profesional',
     CIFPD: 'Centro Integrado de FP a Distancia',
-    'CIFP-DISTANCIA': 'Centro Integrado de FP a Distancia',
     CPES: 'Centro Privado de Educación Secundaria',
     CPEPS: 'Centro Privado de Educación Infantil, Primaria y Secundaria',
     CPFPB: 'Centro Privado de Formación Profesional Básica',
     IES: 'Instituto de Educación Secundaria',
     IMFPB: 'Instituto Municipal de Formación Profesional Básica'
-    // Añade aquí cualquier otro código presente en tus datos reales
   }
 
-  // Asocia tipo-centro -> icono
   tipoCentroIcono: Record<string, string> = {
     CIFP: 'assets/images/marker-cifp.png',
     CPEPS: 'assets/images/marker-cpeips.png',
     CPES: 'assets/images/marker-cpes.png',
     CPFPB: 'assets/images/marker-cpfpb.png',
     IES: 'assets/images/marker-ies.png'
-    // Añade aquí más si tienes
   }
 
   ngOnInit (): void {
@@ -81,14 +79,14 @@ export class MapaCentrosComponent implements OnInit, AfterViewInit {
   }
 
   cargarListas (): void {
-    console.log('Centros:' + centros.length)
+    console.log('Centros:' + institutos.length)
     console.log(
-      'Tipos de Centros:' + Array.from(new Set(centros.map(c => c.DGENRC)))
+      'Tipos de Centros:' + Array.from(new Set(institutos.map(c => c.DGENRC)))
     )
 
-    this.provincias = Array.from(new Set(centros.map(c => c.DTERRC))).sort()
+    this.provincias = Array.from(new Set(institutos.map(c => c.DTERRC))).sort()
     const tiposUnicos = Array.from(
-      new Set(centros.map(c => c.DGENRC).filter(v => !!v && v.trim() !== ''))
+      new Set(institutos.map(c => c.DGENRC).filter(v => !!v && v.trim() !== ''))
     ).sort()
     this.tiposCentro = tiposUnicos.map(codigo => ({
       value: codigo,
@@ -97,19 +95,33 @@ export class MapaCentrosComponent implements OnInit, AfterViewInit {
   }
 
   inicializarMapa(): void {
+    // ✅ Crear overlay para el popup principal
     this.popupOverlay = new Overlay({
       element: document.getElementById('popup') as HTMLElement,
       positioning: 'bottom-center',
       stopEvent: false,
       offset: [0, -40],
-      autoPan: { animation: { duration: 250 }, margin: 80 }
+      autoPan: false
+    })
+
+    // ✅ Crear overlay para el tooltip (hover) - ASIGNAR A this.tooltipElement
+    this.tooltipElement = document.createElement('div')
+    this.tooltipElement.id = 'map-tooltip'
+    this.tooltipElement.className = 'map-tooltip'
+    document.body.appendChild(this.tooltipElement)
+
+    this.tooltipOverlay = new Overlay({
+      element: this.tooltipElement,
+      positioning: 'top-center',
+      stopEvent: false,
+      offset: [0, -15]
     })
   
     this.map = new Map({
       target: 'map',
       layers: [new TileLayer({ source: new OSM() })],
       view: new View({ center: [0, 0], zoom: 2 }),
-      overlays: [this.popupOverlay]
+      overlays: [this.popupOverlay, this.tooltipOverlay] // ✅ Usar this.tooltipOverlay
     })
   
     this.map.getView().fit(this.euskadiExtent, {
@@ -118,39 +130,147 @@ export class MapaCentrosComponent implements OnInit, AfterViewInit {
       maxZoom: 10.5
     })
   
+    // ✅ Mostrar tooltip al pasar el cursor (hover)
     this.map.on('pointermove', evt => {
-      const hit = this.map.hasFeatureAtPixel(evt.pixel)
-      ;(this.map.getTargetElement() as HTMLElement).style.cursor = hit
-        ? 'pointer'
-        : ''
+      const feature = this.map.forEachFeatureAtPixel(
+        evt.pixel,
+        f => f as Feature<any>
+      )
+      
+      if (feature) {
+        // Mostrar cursor pointer
+        (this.map.getTargetElement() as HTMLElement).style.cursor = 'pointer'
+        
+        // ✅ Usar tooltipNombre (DGENRC + NOM + DGENRE)
+        const nombreCompleto = feature.get('tooltipNombre') || feature.get('name') || 'Centro'
+        this.tooltipElement.innerHTML = nombreCompleto
+        this.tooltipElement.style.display = 'block'
+        this.tooltipOverlay.setPosition(evt.coordinate)
+      } else {
+        // Ocultar tooltip y restaurar cursor
+        (this.map.getTargetElement() as HTMLElement).style.cursor = ''
+        this.tooltipElement.style.display = 'none'
+      }
     })
   
+    // ✅ Click para mostrar popup completo
     this.map.on('singleclick', evt => {
       const feature = this.map.forEachFeatureAtPixel(
         evt.pixel,
         f => f as Feature<any>
       )
       const popup = this.popupOverlay.getElement() as HTMLElement
+      
       if (feature) {
         const props = feature.getProperties()
         popup.innerHTML = props['contenido'] || props['name'] || 'Centro'
-        this.popupOverlay.setOffset([0, -40])
-        this.popupOverlay.setPositioning('bottom-center' as any)
-        this.popupOverlay.setPosition(evt.coordinate)
+        
+        // Ocultar tooltip al hacer click
+        this.tooltipElement.style.display = 'none'
+        
+        // Posicionar popup inteligentemente
+        this.posicionarPopupInteligente(evt.pixel, evt.coordinate, popup)
+        
         popup.style.display = 'block'
       } else {
         popup.style.display = 'none'
       }
     })
   
-    // ✅ COMENTAR O ELIMINAR esta línea para que NO cargue los centros al inicio
-    // this.actualizarMapa(true);
-    
-    // ✅ OPCIONAL: Crear capa vacía inicial
     this.pinsLayer = new VectorLayer({
       source: new VectorSource({ features: [] })
     });
     this.map.addLayer(this.pinsLayer);
+  }
+
+  /**
+   * ✅ SOLUCIÓN DEFINITIVA: Posicionamiento manual con CSS
+   * Ignoramos el sistema de positioning de OpenLayers y usamos posición absoluta
+   */
+  private posicionarPopupInteligente(pixel: number[], coordinate: number[], popup: HTMLElement): void {
+    const mapSize = this.map.getSize()
+    if (!mapSize) return
+
+    const [width, height] = mapSize
+    const [x, y] = pixel
+
+    // ✅ Obtener el ancho real de la sidebar
+    const sidebar = document.querySelector('.sidebar') as HTMLElement
+    const sidebarWidth = sidebar ? sidebar.offsetWidth : 420
+
+    // ✅ Calcular área visible del mapa
+    const areaVisibleWidth = width - sidebarWidth
+    const xRelativo = x - sidebarWidth
+
+    // ✅ Hacer el popup visible para medir su tamaño
+    popup.style.display = 'block'
+    popup.style.visibility = 'hidden'
+    const popupRect = popup.getBoundingClientRect()
+    const popupWidth = popupRect.width || 320
+    const popupHeight = popupRect.height || 280
+    popup.style.visibility = 'visible'
+
+    // ✅ Calcular espacio disponible
+    const espacioArriba = y
+    const espacioAbajo = height - y
+    const espacioIzquierda = xRelativo
+    const espacioDerecha = areaVisibleWidth - xRelativo
+
+    const margen = 40
+
+    // ✅ Decidir posición
+    let posicionVertical: 'arriba' | 'abajo'
+    let posicionHorizontal: 'izquierda' | 'centro' | 'derecha'
+
+    // VERTICAL: ¿Arriba o abajo del marcador?
+    if (espacioAbajo >= popupHeight + margen) {
+      posicionVertical = 'abajo'
+    } else if (espacioArriba >= popupHeight + margen) {
+      posicionVertical = 'arriba'
+    } else {
+      // Si no cabe en ninguno, elegir el que tenga más espacio
+      posicionVertical = espacioArriba > espacioAbajo ? 'arriba' : 'abajo'
+    }
+
+    // HORIZONTAL: ¿Izquierda, centro o derecha del marcador?
+    if (espacioDerecha >= popupWidth / 2 + margen && espacioIzquierda >= popupWidth / 2 + margen) {
+      posicionHorizontal = 'centro'
+    } else if (espacioIzquierda >= popupWidth + margen) {
+      posicionHorizontal = 'izquierda'
+    } else if (espacioDerecha >= popupWidth + margen) {
+      posicionHorizontal = 'derecha'
+    } else {
+      posicionHorizontal = espacioIzquierda > espacioDerecha ? 'izquierda' : 'derecha'
+    }
+
+    // ✅ APLICAR POSICIÓN MANUALMENTE CON CSS
+    let offsetX = 0
+    let offsetY = 0
+    let transformX = '0'
+    let transformY = '0'
+
+    if (posicionVertical === 'arriba') {
+      offsetY = -20
+      transformY = '-100%'
+    } else {
+      offsetY = 20
+      transformY = '0'
+    }
+
+    if (posicionHorizontal === 'centro') {
+      transformX = '-50%'
+    } else if (posicionHorizontal === 'izquierda') {
+      offsetX = -20
+      transformX = '-100%'
+    } else {
+      offsetX = 20
+      transformX = '0'
+    }
+
+    popup.style.transform = `translate(${transformX}, ${transformY})`
+    this.popupOverlay.setPositioning('bottom-center' as any)
+    this.popupOverlay.setOffset([offsetX, offsetY])
+    this.popupOverlay.setPosition(coordinate)
   }
 
   actualizarMunicipios (): void {
@@ -159,7 +279,7 @@ export class MapaCentrosComponent implements OnInit, AfterViewInit {
     this.municipioEnabled = false
     if (this.provinciaSeleccionada) {
       const municipiosSet = new Set<string>()
-      centros
+      institutos
         .filter(c => c.DTERRC === this.provinciaSeleccionada)
         .forEach(c => municipiosSet.add(c.DMUNIC))
       this.municipios = Array.from(municipiosSet).sort()
@@ -173,13 +293,11 @@ export class MapaCentrosComponent implements OnInit, AfterViewInit {
   actualizarMapa(shouldFit: boolean = false): void {
     if (!this.map) return;
   
-    // ✅ Si no hay ningún filtro seleccionado, no mostrar nada
     if (!this.provinciaSeleccionada && 
         !this.municipioSeleccionado && 
         !this.tipoCentroSeleccionado && 
         !this.moduloSeleccionado) {
       
-      // Limpiar el mapa
       if (this.pinsLayer) this.map.removeLayer(this.pinsLayer);
       
       this.pinsLayer = new VectorLayer({
@@ -187,27 +305,18 @@ export class MapaCentrosComponent implements OnInit, AfterViewInit {
       });
       this.map.addLayer(this.pinsLayer);
       
-      // Volver a la vista de Euskadi
       this.map.getView().fit(this.euskadiExtent, {
         duration: 400,
         padding: [30, 30, 30, 30],
         maxZoom: 10.5
       });
       
-      return; // ✅ Salir del método sin mostrar centros
+      return;
     }
   
     const normaliza = (x: string) => (x || '').trim().toUpperCase();
   
-    // Debug info
-    console.log('Total centros:', centros.length);
-    console.log('Provincia seleccionada:', this.provinciaSeleccionada);
-    console.log('Municipio seleccionado:', this.municipioSeleccionado);
-    console.log('Tipo centro seleccionado:', this.tipoCentroSeleccionado);
-    console.log('Modulo seleccionado:', this.moduloSeleccionado);
-  
-    // FILTRO UNIFICADO (modo bandera, robusto)
-    let filtrados = centros.filter(centro => {
+    let filtrados = institutos.filter(centro => {
       let insertar = true;
       if (this.provinciaSeleccionada && normaliza(centro.DTERRC) !== normaliza(this.provinciaSeleccionada)) insertar = false;
       if (this.municipioSeleccionado && normaliza(centro.DMUNIC) !== normaliza(this.municipioSeleccionado)) insertar = false;
@@ -219,9 +328,6 @@ export class MapaCentrosComponent implements OnInit, AfterViewInit {
       return insertar;
     });
   
-    console.log('Centros filtrados:', filtrados.length, filtrados);
-  
-    // El resto del código igual...
     const features = filtrados
       .filter(
         centro =>
@@ -237,9 +343,14 @@ export class MapaCentrosComponent implements OnInit, AfterViewInit {
         const tipo = centro.DGENRC;
         const icon = this.tipoCentroIcono[tipo] || 'assets/images/marker-default.png';
         const contenido = this.getPopupHTML(centro);
+        
+        // ✅ Crear nombre para tooltip (DGENRC + NOM + DGENRE)
+        const tooltipNombre = `${centro.DGENRC || ''} ${centro.NOM || ''} ${centro.DGENRE || ''}`.trim();
+        
         const feature = new Feature({
           geometry: new Point(point),
           name: centro.NOM,
+          tooltipNombre: tooltipNombre,
           contenido
         });
         feature.setStyle(
@@ -257,7 +368,6 @@ export class MapaCentrosComponent implements OnInit, AfterViewInit {
     });
     this.map.addLayer(this.pinsLayer);
   
-    // Encadrar solo si se pide (al cambiar filtro o inicial)
     if (shouldFit && features.length > 0) {
       const source = this.pinsLayer.getSource();
       if (!source) return;
@@ -293,7 +403,6 @@ export class MapaCentrosComponent implements OnInit, AfterViewInit {
       });
     }
   }
-  
 
   private getPopupHTML (centro: any): string {
     const rows: string[] = []

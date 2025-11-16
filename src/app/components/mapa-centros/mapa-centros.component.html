@@ -1,42 +1,32 @@
-<!-- ✅ NUEVO: Header con logo y enlace -->
-<header class="app-header">
-  <div class="header-content">
-    <a href="/" class="logo">educafind</a>
-    <a href="/" class="nav-link">Inicio</a>
-  </div>
-  <div class="header-title">
-    &copy; Buscador de Centros OpenLayer Euskadi ajustable al contenido
-  </div>
-</header>
-
-<div class="main-container">
-  <div class="sidebar">
-    <div class="filtro-titulo">Configure filtros</div>
-    <select class="flat-select" [(ngModel)]="provinciaSeleccionada" (change)="actualizarMunicipios()">
-      <option value="">Seleccione provincia</option>
+<div class="mapa-centros-container">
+  <div class="filters">
+    <select [(ngModel)]="provinciaSeleccionada" (change)="actualizarTiposCentro()">
+      <option value="">Provincia</option>
       <option *ngFor="let prov of provincias" [value]="prov">{{prov}}</option>
     </select>
     
-    <select class="flat-select" [(ngModel)]="municipioSeleccionado" [disabled]="!municipioEnabled" (change)="actualizarMapa(true)">
-      <option value="">Seleccione municipio</option>
-      <option *ngFor="let municipio of municipios" [value]="municipio">{{municipio}}</option>
+    <select [(ngModel)]="tipoCentroSeleccionado" (change)="actualizarMunicipios()">
+      <option *ngFor="let tipo of tiposCentroGlobal" [value]="tipo.value">{{ tipo.label }}</option>
     </select>
     
-    <select class="flat-select" [(ngModel)]="tipoCentroSeleccionado" (change)="actualizarMapa()">
-      <option value="">Seleccione tipo de centro</option>
-      <option *ngFor="let tipo of tiposCentro" [value]="tipo.value">
-        {{ tipo.label }}
-      </option>
+    <select [(ngModel)]="municipioSeleccionado" (change)="actualizarFamilias()">
+      <option value="">Municipio</option>
+      <option *ngFor="let muni of municipios" [value]="muni">{{muni}}</option>
     </select>
-
-    <select class="flat-select" [(ngModel)]="moduloSeleccionado" (change)="actualizarMapa(false)">
-      <option value="">Seleccione ciclo formativo</option>
-      <option *ngFor="let ciclo of ciclos" [value]="ciclo.codcicl">{{ciclo.nom}}</option>
+    
+    <select [(ngModel)]="familiaSeleccionada" (change)="actualizarCiclos()">
+      <option value="">Familia profesional</option>
+      <option *ngFor="let fam of familiasProfesionales" [value]="fam">{{fam}}</option>
     </select>
+    
+    <select [(ngModel)]="cicloSeleccionado">
+      <option value="">Ciclo</option>
+      <option *ngFor="let ciclo of ciclos" [value]="ciclo.codigo">{{ciclo.nombre}}</option>
+    </select>
+    
   </div>
-  
-  <div class="main-map">
-    <div id="map"></div>
-    <div id="popup" class="ol-popup"></div>
-  </div>
+  <div id="map" class="mapdiv"></div>
+  <div id="popup" class="ol-popup"></div>
 </div>
+
+

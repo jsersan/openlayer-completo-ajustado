@@ -1,4 +1,4 @@
-export interface CicloFormativo {
+export interface asignacion {
     codcicl: number;
     nom: string;
     nomEuskera: string;
@@ -12,7 +12,7 @@ export interface CicloFormativo {
     duracion?: number;
   }
   
-  export const ciclos: CicloFormativo[] = [
+  export const ciclos: asignacion[] = [
     // INFORMÁTICA Y COMUNICACIONES - GRADO MEDIO
     {
       codcicl: 10001,

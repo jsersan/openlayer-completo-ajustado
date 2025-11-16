@@ -10,7 +10,7 @@ export interface CicloFormativo {
     idiomas?: string[]; // Idiomas en los que se imparte
   }
   
-  export const ciclosFormativos: CicloFormativo[] = [
+  export const ciclos: CicloFormativo[] = [
     // FORMACIÓN PROFESIONAL BÁSICA
     {
       codigo: "FPB101",
@@ -1267,23 +1267,23 @@ export interface CicloFormativo {
   // Función auxiliar para filtrar ciclos por diferentes criterios
   export const filtrarCiclos = {
     porGrado: (grado: 'Básico' | 'Medio' | 'Superior') => 
-      ciclosFormativos.filter(ciclo => ciclo.grado === grado),
+      ciclos.filter(ciclo => ciclo.grado === grado),
     
     porFamilia: (familia: string) => 
-      ciclosFormativos.filter(ciclo => ciclo.familia === familia),
+      ciclos.filter(ciclo => ciclo.familia === familia),
     
     porModalidad: (modalidad: 'A' | 'B' | 'D') => 
-      ciclosFormativos.filter(ciclo => ciclo.modalidad === modalidad),
+      ciclos.filter(ciclo => ciclo.modalidad === modalidad),
     
     porTurno: (turno: 'Diurno' | 'Vespertino' | 'Nocturno') => 
-      ciclosFormativos.filter(ciclo => ciclo.turno === turno),
+      ciclos.filter(ciclo => ciclo.turno === turno),
     
     porIdioma: (idioma: string) => 
-      ciclosFormativos.filter(ciclo => ciclo.idiomas?.includes(idioma)),
+      ciclos.filter(ciclo => ciclo.idiomas?.includes(idioma)),
     
     disponiblesEnIngles: () => 
-      ciclosFormativos.filter(ciclo => ciclo.idiomas?.includes('EN'))
+      ciclos.filter(ciclo => ciclo.idiomas?.includes('EN'))
   };
   
   // Obtener todas las familias profesionales disponibles
-  export const familiasProfesionales = [...new Set(ciclosFormativos.map(c => c.familia))].sort();
+  export const familiasProfesionales = [...new Set(ciclos.map(c => c.familia))].sort();
