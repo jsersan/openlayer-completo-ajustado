@@ -19,7 +19,7 @@ export const centros=[
     "TEL1": 945187001,
     "TFAX": null,
     "EMAIL": "010046aa@hezkuntza.net",
-    "PAGINA": "http://www.aniturri.hezkuntza.net/web/guest",
+    "PAGINA": "https://aniturri.hezkuntza.net/es",
     "COOR_X": 549641.541126792,
     "COOR_Y": 4744470.076836899
   },
@@ -139,7 +139,7 @@ export const centros=[
     "TEL1": 945233714,
     "TFAX": 945233750,
     "EMAIL": "010137aa@hezkuntza.net",
-    "PAGINA": "http://www.icjardin.net",
+    "PAGINA": "https://ciudadjardin.hezkuntza.net/",
     "COOR_X": 526365.163602058,
     "COOR_Y": 4742698.717391991
   },
@@ -163,7 +163,7 @@ export const centros=[
     "TEL1": 945000440,
     "TFAX": 945000439,
     "EMAIL": "010138aa@hezkuntza.net",
-    "PAGINA": "http://www.mendizabala.com",
+    "PAGINA": "https://www.mendizabala.eus/",
     "COOR_X": 525751.532607079,
     "COOR_Y": 4742678.001608628
   },

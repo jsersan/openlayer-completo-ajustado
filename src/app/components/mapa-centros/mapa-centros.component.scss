@@ -1,14 +1,66 @@
+// ✅ NUEVO: Estilos del header
+.app-header {
+  background: linear-gradient(135deg, #1e9bd7 0%, #17a2b8 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  height: 48px; // ✅ Altura reducida
+  
+  .header-content {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    
+    .logo {
+      font-size: 1.3em;
+      font-weight: 600;
+      color: white;
+      text-decoration: none;
+      letter-spacing: -0.5px;
+      
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+    
+    .nav-link {
+      color: white;
+      text-decoration: none;
+      font-size: 0.95em;
+      padding: 0.3rem 0.8rem;
+      border-radius: 4px;
+      transition: background 0.2s;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.15);
+      }
+    }
+  }
+  
+  .header-title {
+    font-size: 0.9em;
+    font-weight: 400;
+    opacity: 0.95;
+  }
+}
+
 .main-container {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  height: 100vh;
+  height: calc(100vh - 48px); // ✅ Restar altura del header
 }
 
 .sidebar {
-  width: 320px;
-  min-width: 280px;
-  max-width: 400px;
+  width: 420px; // ✅ AUMENTADO de 320px a 420px
+  min-width: 380px; // ✅ AUMENTADO de 280px a 380px
+  max-width: 500px;
   background: #fff;
   padding: 1.2rem 1rem 1rem 1.2rem;
   box-shadow: 2px 0 12px #00000028;
@@ -16,6 +68,7 @@
   font-family: inherit;
   font-size: 16px;
   border-radius: 0 0 16px 0;
+  overflow-y: auto; // ✅ Por si hay muchos filtros
 }
 
 .filtro-titulo {
@@ -27,28 +80,48 @@
 
 .flat-select {
   width: 100%;
-  min-width: 230px;
+  min-width: 100%; // ✅ Ocupar todo el ancho disponible
   display: block;
   margin-bottom: 16px;
-  padding: 8px 14px;
+  padding: 10px 14px; // ✅ Aumentado padding vertical
   border: 1px solid #cdd0d7;
   border-radius: 5px;
   background-color: #f5f6fa;
-  font-size: 1em;
+  font-size: 0.95em; // ✅ Reducido ligeramente para que quepa más texto
   font-family: inherit;
   box-sizing: border-box;
   outline: none;
   transition: border-color 0.18s;
-}
-.flat-select:focus {
-  border-color: #2e90fa;
+  white-space: normal; // ✅ Permitir que el texto se ajuste
+  
+  option {
+    padding: 8px;
+    white-space: normal; // ✅ Permitir texto en múltiples líneas
+  }
+  
+  &:focus {
+    border-color: #2e90fa;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 .main-map {
   flex: 1 1 auto;
   min-width: 0;
-  height: 100vh;
+  height: 100%;
   position: relative;
+  
+  #map {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
 }
 
 .ol-popup {
@@ -58,23 +131,63 @@
   border-radius: 9px;
   box-shadow: 0 4px 23px rgba(49, 45, 146, 0.08);
   background: #fff;
+  position: absolute;
+  z-index: 10;
+  
+  strong {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  a {
+    color: #2e90fa;
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }
 
 @media (max-width: 900px) {
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+    height: auto;
+    padding: 0.8rem 1rem;
+    
+    .header-content {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+    
+    .header-title {
+      font-size: 0.85em;
+    }
+  }
+  
   .main-container {
     flex-direction: column;
+    height: calc(100vh - 90px); // Ajustar por header más alto en móvil
   }
+  
   .sidebar {
     width: 100vw;
     min-width: unset;
     max-width: unset;
     border-radius: 0;
     font-size: 14px;
+    max-height: 40vh;
   }
+  
   .main-map {
     width: 100vw;
     height: 60vh;
     min-width: unset;
     position: static;
+    
+    #map {
+      position: relative;
+    }
   }
 }
